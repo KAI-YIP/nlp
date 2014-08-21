@@ -1,0 +1,8 @@
+只用名词进行实验
+
+评论长度的分布（依据sample-result3.txt)----评论长度统计图.png
+分词-----sample-result1.txt
+词性选择------sample-result2.txt
+预处理结果------sample-result4.txt
+lda实验----主题数（30-50,2）
+困惑度曲线----困惑度曲线1.txt，困惑度曲线2.txt, 困惑度曲线3.txt
