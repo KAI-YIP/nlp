@@ -14,7 +14,7 @@ class LdaTopicSimilar:
 
 	def f_open_file(file_trace,word_number=100):
 		"""将lda主题-词文本存储为不计概率值的字典,topic_dict为带概率的字典，topic_unpro_dict为不带概率的字典"""
-		f=open(file_trace,'r')	
+		f=open(file_trace,'r')
 		count=0
 		txt=f.readlines()
 		f.close()
@@ -76,5 +76,3 @@ if __name__ == '__main__':
 		for word in topic_samilarity_lenth_dict[key]:
 			f.write(str(word)+" ")
 		f.write("\n")
-
-
