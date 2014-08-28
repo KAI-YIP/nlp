@@ -46,6 +46,7 @@ class lda:
 		return wordlist
 
 	def f_samilarity(samilarity_word_list1,samilarity_word_list2,samilarity_threshold=5):
+		"""计算两主题间词的相似程度，得到最长相似长度"""
 		intersection=set(samilarity_word_list1)&set(samilarity_word_list2)
 		lenth_intersection=len(intersection)
 		if lenth_intersection>=samilarity_threshold:
@@ -54,6 +55,7 @@ class lda:
 			return None
 
 	def f_save_file(save_file_list,save_trace="./lda/iphone5s/diff-sampling/samilar.txt"):
+		"""保存文件"""
 		f=open(save_trace,'a')
 		for word in save_file_list:
 			word_write=str(word)+"\n"
@@ -74,5 +76,5 @@ if __name__ == '__main__':
 				samilarity.append(topic_intersection)
 			else:
 				pass
-	lda.f_save_file(samilarity,"./lda/iphone5s/diff-sampling/samilar/samilar"+str(threshold)+".txt")
+	lda.f_save_file(samilarity,"./lda/iphone5s/diff-sampling/samilar/samilar...."+str(threshold)+".txt")
 	print (len(samilarity))
