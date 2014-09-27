@@ -4,7 +4,7 @@ import xlrd
 class AR:
 	"""一种改进型的关联规算法，引入item时间，价格，数量属性"""
 
-	def custom_id_found(custom_id_found_data='./data_test.xlsx'):
+	def custom_id_found(custom_id_found_data='./data.xlsx'):            #数据集位置
 		"""扫描数据库，并建立以事物项为单位的字典，字典包括N个item字典"""
 		data=xlrd.open_workbook(custom_id_found_data)
 		table = data.sheets()[0]             #获取第一章表，如果要获取第二张表将０改为１
@@ -12,6 +12,7 @@ class AR:
 		custom_id_naive={}
 		custom_name=0
 		brought_time=0
+		print ("频繁项集词典创建中")
 		for i in list(range(table.nrows)):
 			if i!=0:
 				temp_list=(table.row_values(i))
@@ -27,17 +28,16 @@ class AR:
 				item_naive.append(product_id)                          			
 				custom_id[tuple([custom_name,brought_time])]=item
 				custom_id_naive[tuple([custom_name,brought_time])]=item_naive	
-		print (custom_id)
+		print ("频繁项集词典创建完成")
 		return custom_id,custom_id_naive
 
 	def save_file(save_file_dict,save_trace="./result_set.txt"):
 		"""对得到的项集结果进行保存"""
 		f=open(save_trace,'a')
 		for key in save_file_dict:
-			f.write("(")
 			for item in key:
-				f.write(str(item)+" ")
-			f.write(")")
+				f.write(str(item)+",")
+			f.write(" ")
 			for value in save_file_dict[key]:
 				f.write(str(value)+" ")
 			f.write("\n")
@@ -136,55 +136,61 @@ class AR:
 		product_2set,product_2set_key=product_2set(product_1set,product_1set_key,support)					#生成二项频繁集，并保存事务项key
 		product_3set,product_3set_key=product_3set(product_1set,product_2set,product_2set_key,support)		#生成三项频繁集，并保存事务项key	#
 		product_1set_dict={}
-		product_property=[]
-		print (product_1set_key)
 		for item in product_1set:
 			R,F,M=0,0,0
-			print (item)
 			for key in product_1set_key:
 				if item in AR_custom_dict[key]:
-					print ((AR_custom_dict[key][item][1])*AR_custom_dict[key][item][0])
-					"""temp_r=(1-sigma)**(t0-int(key[1])
-					temp_f=AR_custom_dict[key][item][1]
-					temp_m=AR_custom_dict[key][1]*AR_custom_dict[key][0]"""
-			print (R,F,M)
-			
-
-
-
-
-	def improved_AR():
-		"""根据给定的"""
-		def improved_1set():
-			"""基于原始的一项频繁集输出RFM过滤的一项频繁集"""
-
-
-
-		def improved_2set():
-			"""基于原始的二项频繁集输出RFM过滤的二项频繁集"""		
-
-
-		def improved_3set():
-			"""基于原始的三项频繁集输出RFM过滤的三项频繁集"""
-
+					F+=(int(AR_custom_dict[key][item][1]))
+					R+=(1-sigma)**(t0-int(key[1]))                                                     #R的计算方法
+					M+=AR_custom_dict[key][item][1]*AR_custom_dict[key][item][0]				#Ｍ的计算方法
+			list_RFM=[R,F,M]
+			product_1set_dict[tuple([item])]=list_RFM
+		print ("RFM一项频繁集计算完成，即将写入AR_set.txt")
+		product_2set_dict={}
+		for item in product_2set:
+			R,F,M=0,0,0
+			for key in product_2set_key:
+				if set(item) <= set(AR_custom_dict[key]):
+					item_tuple=tuple(item)
+					item1=item_tuple[0]
+					item2=item_tuple[1]
+					quantity=int(min(AR_custom_dict[key][item1][1],AR_custom_dict[key][item2][1]))
+					F+=quantity
+					R+=((1-sigma)**(t0-int(key[1])))#R的计算方法
+					price_sum=float(AR_custom_dict[key][item1][0])+float(AR_custom_dict[key][item2][0])#Ｍ的计算方法
+					M+=(quantity*price_sum)
+			list_RFM=[R,F,M]
+			product_2set_dict[item_tuple]=list_RFM
+		print ("RFM二项频繁集计算完成，即将写入AR_set.txt")
+		product_3set_dict={}
+		for item in product_3set:
+			R,F,M=0,0,0
+			for key in product_3set_key:
+				if set(item) <= set(AR_custom_dict[key]):
+					item_tuple=tuple(item)
+					item1=item_tuple[0]
+					item2=item_tuple[1]
+					item3=item_tuple[2]
+					quantity=min(AR_custom_dict[key][item1][1],AR_custom_dict[key][item2][1],AR_custom_dict[key][item3][1])
+					F+=int(quantity)
+					R+=((1-sigma)**(t0-int(key[1])))#R的计算方法
+					price_sum=float(AR_custom_dict[key][item1][0])+float(AR_custom_dict[key][item2][0])+float(AR_custom_dict[key][item3][0])
+					M+=(quantity*price_sum)
+			list_RFM=[R,F,M]
+			product_3set_dict[item_tuple]=list_RFM
+		print ("RFM三项频繁集计算完成，即将写入AR_set.txt")	
+		return product_1set_dict,product_2set_dict,product_3set_dict
 
 if __name__=='__main__':
-	"""print ("请输入support,alpha,beta,gama,sigma,to，用空格隔开，输入完请按Ｅnter键：\n")
+	print ("请输入support,sigma,to，用空格隔开，输入完请按Ｅnter键：\n")
 	a=input()
 	a_clean=a.split()
-	support=a_clean[0]
-	alpha=a_clean[1]
-	beta=a_clean[2]
-	gama=a_clean[3]
-	sigma=a_clean[5]
-	to=a_clean[6]"""
-	support=2
-	t0=1200
-	sigma=0.1
+	support=int(a_clean[0])
+	sigma=float(a_clean[1])
+	t0=int(a_clean[2])
 	custom_id,custom_id_naive=AR.custom_id_found()
-	AR.naiveAR(custom_id,custom_id_naive,support)
-
-
-
-
-	print ("计算完毕，请到当前文件夹下,ARset.txt和RFMset.txt中查看结果，开哥只能帮你到这了！！！")
+	product_1set_dict,product_2set_dict,product_3set_dict=AR.naiveAR(custom_id,custom_id_naive,support)
+	AR.save_file(product_1set_dict,"./AR_set.txt")             #将一项集写入结果
+	AR.save_file(product_2set_dict,"./AR_set.txt")             #将二项集写入结果
+	AR.save_file(product_3set_dict,"./AR_set.txt")             #将三项集写入结果
+	print ("计算完毕，请到当前文件夹下,ARset.txt中查看结果，开哥只能帮你到这了！！！")
