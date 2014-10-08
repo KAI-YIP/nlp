@@ -1,13 +1,28 @@
 #coding=utf-8
-
-f1=open("./主题-主要名词.txt",'r')
-f2=open("./Hir-topic.csv",'a')
+import matplotlib.pyplot as plt
+f1=open("./wordfrequency.txt",'r')
+y=[]
+xlabel=[]
+count=0
 for line in f1.readlines():
-	line_clean=line.split()
-	if len(line_clean)>=2:
-		topic1=" ".join([line_clean[1],line_clean[2]])
-		topic2=" ".join([line_clean[1],line_clean[3]])
-		topic3=" ".join([line_clean[2],line_clean[3]])
-		f2.write(topic1+"\n"+topic2+"\n"+topic3+"\n")
+	if count<=30:
+		line_clean=line.split()
+		word=line_clean[0].split("/")
+		if "a" in word[1] or "d" in word[1]:
+			xlabel.append(word[0])
+			y.append(line_clean[1])
+			count+=1
+		else:
+			pass
 	else:
-		pass
+		break
+x=range(len(y))
+plt.plot(x,y,"--")
+plt.xticks(x,xlabel)
+plt.xlabel("word",color='black')
+plt.ylabel("frequency")
+for label in plt.gca().xaxis.get_ticklabels(): 
+     label.set_rotation(90)
+     label.set_ha('center')
+     label.set_color('black')
+plt.show()
