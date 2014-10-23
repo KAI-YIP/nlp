@@ -1,15 +1,12 @@
 #coding=utf-8
-import jieba  
-import sys 
-sys.path.append("../") 
-jieba.load_userdict("/home/alber/jieba/user_dict.txt")
+import sys
+import numpy
 import matplotlib.pyplot as plt
-import jieba.posseg as pseg
 
 class lda:
 	"""对topic进行再处理和清洗，构造新的主题空间"""
 	
-	def openfile(open_trace="./iphone5s_lda.txt"):
+	def openfile(open_trace="./lda/iphone5s_lda.txt"):
 		"""打开lda模型，并建立topic字典"""
 		
 		f=open(open_trace,'r')
@@ -83,8 +80,8 @@ class lda:
 	def TopicCluster(TopicCluster_dict):
 		"""计算topic两两之间的相似度，并输出为csv数据，方便做图"""
 
-		def Samilarity(samilar_list1,samilar_list2):
-			"""计算两列表(列表的项为元组)的相似度，并返回相似度"""
+		def Samilarity1(samilar_list1,samilar_list2):
+			"""计算两列表(列表的项为元组)的相似度(概率值相加)，并返回相似度"""
 			samilar_dict1={}
 			samilar_dict2={}
 			common_key=[]
@@ -106,6 +103,41 @@ class lda:
 			else:
 				samilarity_value=0
 			return samilarity_value,common_key
+
+		def Samilarity2(samilar_list1,samilar_list2):
+			"""计算余弦相似度(取topic前30词计算)"""
+			samilar_dict1={}
+			samilar_dict2={}
+			dict1_prop=0
+			dict2_prop=0
+			if len(samilar_list1)<=30 and len(samilar_list2)<=30:
+				for itern1 in samilar_list1[:30]:
+					samilar_dict1[itern1[0]]=float(itern1[1])
+					dict1_prop+=numpy.square(float(itern1[1]))
+				for itern2 in samilar_list2[:30]:
+					samilar_dict2[itern2[0]]=float(itern2[1])
+					dict2_prop+=numpy.square(float(itern2[1]))
+			else:
+				position=min([len(samilar_list1),len(samilar_list2)])
+				for itern1 in samilar_list1[:position]:
+					samilar_dict1[itern1[0]]=float(itern1[1])
+					dict1_prop+=numpy.square(float(itern1[1]))
+				for itern2 in samilar_list2[:position]:
+					samilar_dict2[itern2[0]]=float(itern2[1])
+					dict2_prop+=numpy.square(float(itern2[1]))
+			denominator=numpy.sqrt(dict1_prop)*numpy.sqrt(dict2_prop)
+			common_key=[]
+			common_pro=0
+			for key in samilar_dict1:
+				if key in samilar_dict2:
+					common_pro+=float(samilar_dict1[key]*samilar_dict2[key])
+					common_key.append(key)
+			if common_pro!=0:
+				samilarity_value=common_pro/denominator
+			else:
+				samilarity_value=0
+			return samilarity_value,common_key			
+
 		coralation=[]
 		cora_dict={}
 		common_dict={}
@@ -113,7 +145,7 @@ class lda:
 			for key2 in TopicCluster_dict:
 				if key1!=key2 and set([key1,key2]) not in coralation:
 					coralation.append(set([key1,key2]))
-					Samilarity_key,common_key=Samilarity(TopicCluster_dict[key1],TopicCluster_dict[key2])
+					Samilarity_key,common_key=Samilarity2(TopicCluster_dict[key1],TopicCluster_dict[key2])        #选择相似度的度量方式
 					cora_dict[tuple([key1,key2])]=Samilarity_key
 					common_dict[tuple([key1,key2])]=common_key
 		return cora_dict,common_dict
@@ -123,7 +155,7 @@ class lda:
 		list_str=" ".join(list2str_list)
 		return list_str
 
-	def savefile(save_dict,save_trace="./iphone5slda2.txt"):
+	def savefile(save_dict,save_trace="./lda/iphone5slda2.txt"):
 		"""将topic字典文件存入txt"""
 		f=open(save_trace,'a')
 		for key in save_dict:
@@ -161,22 +193,34 @@ class lda:
 			topic_dict[name]=temp_correlation/count
 		return topic_dict
 
+	def topicHconfirm(topic_confirm_dict,topic_h_trace='./correlation/topic-h.txt'):
+		"""通过层次划分，对第一层topic建立联系和区别"""
+		f=open(topic_h_trace,'r')
+		topic_hierarchy=[]
+		for line in f.readlines():
+			line_clean=line.split()
+			topic_hierarchy.append(line_clean)
+		A_hierarchy={}
+		topic_list=topic_hierarchy[1]
+		for topic1 in topic_list:
+			for topic2 in topic_list:
+				if topic1!=topic2:
+					topic_key=tuple([topic1,topic2])
+					if topic_key in topic_confirm_dict:
+						A_hierarchy[topic_key]=topic_confirm_dict[topic_key]
+					else:
+						pass
+				else:
+					pass
+		return A_hierarchy
+
+
 if __name__ =='__main__':
-	new_topic_dict=lda.openfile()
-#	new_topic_dict=lda.topic_del_word(topic_dict)
-	wordlist=[]
-	word_count=0
-	for key in new_topic_dict:
-		for topic_tuple in new_topic_dict[key]:
-			if topic_tuple[0] not in wordlist:
-				wordlist.append(topic_tuple[0])
-				word_count+=1
-			else:
-				pass
-	print (word_count)
-	cora_dict,common_dict=lda.TopicCluster(new_topic_dict)
-	topic_samilarity=sorted(cora_dict.items(),key=lambda d: d[1],reverse=True)
-	sorted_topic=lda.sortedTopic(topic_samilarity)
-	f=open("./sorted_topic1.txt",'a')
-	for k,v in sorted(sorted_topic.items(),key=lambda d: d[1],reverse=True):
-		f.write(k+" "+str(v)+"\n")
+	topic_dict=lda.openfile()
+	#new_topic_dict=lda.topic_del_word(topic_dict)      #倒序差分，删除部分词
+	#lda.savefile(new_topic_dict,)
+	cora_dict,common_dict=lda.TopicCluster(topic_dict)
+	sortedTopic_tuple=sorted(cora_dict.items(),key=lambda d:d[1],reverse=True)
+	f=open("./correlation/cosine/correlation.txt",'a')
+	for key,v in sortedTopic_tuple:
+		f.write(key[0]+" "+key[1]+" "+str(v)+'\n')
