@@ -12,22 +12,11 @@ for line in f.readlines():
 		name="topic"+str(i)
 		topic_dict[name]=one
 		i+=1
-	topic_tuple=sorted(topic_dict.items(),key=lambda d:d[1],reverse=True)
-	data.append(topic_tuple)
-print ("得到排序数据")
-x_name=[]
-y=[]
-for k,v in data[1]:
-	x_name.append(k)
-	y.append(v)
-x=range(len(y))
-plt.title("推断的topic分布排序")
-plt.xlabel("topic")
-plt.ylabel("概率")
-plt.plot(x,y)
-plt.xticks(x,x_name)
-for label in plt.gca().xaxis.get_ticklabels():
-	label.set_rotation(90)
-	label.set_ha('center')
-	label.set_color('red')
-plt.show()
+	data.append(topic_dict)
+minus={}
+for key in data[0]:
+	minus[key]=abs(float(data[0][key])-float(data[1][key]))
+sorted_minus=sorted(minus.items(),key=lambda d:d[1],reverse=True)
+f1=open("./minus.txt",'a')
+for k,v in sorted_minus:
+	f1.write(k+" "+str(v)+"\n")
